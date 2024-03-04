@@ -1,0 +1,76 @@
+1 Действие 
+pip install selenium pytest allure-pytest
+
+2 Действие 
+Создаем PageObject класс
+ базовый класс BasePage, который будет содержать общие методы для всех
+страниц, для взаимодействия со страницей 
+class BasePage:
+    def __init__(self, driver):
+        self.driver = driver
+
+    def click(self, locator):
+        self.driver.find_element(*locator).click()
+
+    def input_text(self, locator, text):
+        input_field = self.driver.find_element(*locator)
+        input_field.clear()
+        input_field.send_keys(text)
+
+3 Действие  Создание класса MainPage
+class MainPage(BasePage):
+
+    SEARCH_INPUT = (By.CSS_SELECTOR, 'input[name="search"]')
+    SEARCH_BUTTON = (By.CSS_SELECTOR, 'button.btn-default')
+
+    def search_for_product(self, query):
+        self.input_text(self.SEARCH_INPUT, query)
+        self.click(self.SEARCH_BUTTON)
+
+
+4 Создание Теста 
+ с PageObject 
+import time
+import pytest
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from page_objects import MainPage
+
+
+@pytest.fixture
+def driver():
+    driver = webdriver.Chrome()
+    driver.get("https://demo-opencart.ru")
+    yield driver
+    driver.quit()
+
+
+def test_search_product(driver):
+    main_page = MainPage(driver)
+    main_page.search_for_product("iPhone")
+    time.sleep(6)
+    assert "Результаты поиска" in driver.title
+
+5 работа с Allure
+import pytest
+
+def pytest_addoption(parser):
+    parser.addoption("--alluredir", action="store", default=None, help="Directory to store Allure reports")
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    rep = outcome.get_result()
+    setattr(item, "rep_" + rep.when, rep)
+
+def pytest_cmdline_preparse(args):
+    if "--alluredir" in args:
+        import shutil
+        shutil.rmtree(args[args.index("--alluredir") + 1], ignore_errors=True)
+
+7 Запуск отчета 
+
+pytest --alluredir=allure_report
+allure serve allure_report
+
+
