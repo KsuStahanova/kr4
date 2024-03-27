@@ -51,6 +51,8 @@ def test_search_product(driver):
     time.sleep(6)
     assert "Результаты поиска" in driver.title
 
+
+
 5 работа с Allure
 import pytest
 
@@ -73,4 +75,37 @@ def pytest_cmdline_preparse(args):
 pytest --alluredir=allure_report
 allure serve allure_report
 
+
+# Дополнительные тесты 
+
+def test_login_success(driver):
+    main_page = MainPage(driver)
+    main_page.login("username", "password")
+    time.sleep(4)
+    assert "Welcome" in driver.title
+
+def test_add_to_cart(driver):
+    main_page = MainPage(driver)
+    main_page.search_for_product("Apple Watch")
+    main_page.add_to_cart()
+    time.sleep(4)
+    assert "Shopping Cart" in driver.title
+
+def test_search_invalid_product(driver):
+    main_page = MainPage(driver)
+    main_page.search_for_product("Nonexistent Product")
+    time.sleep(4)
+    assert "No results found" in driver.page_source
+
+def test_logout(driver):
+    main_page = MainPage(driver)
+    main_page.logout()
+    time.sleep(4)
+    assert "Log In" in driver.title
+
+def test_browse_categories(driver):
+    main_page = MainPage(driver)
+    main_page.browse_categories()
+    time.sleep(4)
+    assert "Categories" in driver.title
 
